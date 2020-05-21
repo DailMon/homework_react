@@ -22,8 +22,8 @@ class App extends Component {
     return (
       <NavigationContainer>
         <Tab.Navigator>
-          <Tab.Screen name="Tracker" component={Tracker} />
           <Tab.Screen name="Chart" component={Chart} />
+          <Tab.Screen name="Tracker" component={Tracker} />
         </Tab.Navigator>
       </NavigationContainer>
     );

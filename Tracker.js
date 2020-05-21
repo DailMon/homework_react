@@ -16,6 +16,7 @@ class Tracker extends Component {
 
   componentDidMount() {
     console.log('Hello from componentDidMount!');
+    this.getData();
   }
 
   async getData() {
@@ -69,13 +70,12 @@ class Tracker extends Component {
     return (
       <View style={styles.container}>
         <Text style={styles.text}>Covid Tracker</Text>
-        <Button title="Get Data" onPress={() => this.getData()} />
         <FlatList
           ItemSeparatorComponent={() => <View style={styles.separator} />}
-          data={flatData}
+          data={flatData.reverse()}
           renderItem={({item, index}) => (
             <Text>
-              {index} : Date: {item.date_value}; Total cases: {item.total_cases}
+              Date: {item.date_value}; Total infected: {item.total_cases}
             </Text>
           )}
         />
