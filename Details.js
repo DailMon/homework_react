@@ -14,7 +14,6 @@ class Details extends Component {
 
   componentDidMount() {
     console.log('Hello from componentDidMount!');
-    //this.getData();
   }
 
   render() {
@@ -28,14 +27,13 @@ class Details extends Component {
         if (flatData[0].date_value === '1/01/20') {
           flatData.reverse();
         }
-        console.log(flatData);
         this.setState({
           flatData: flatData,
           alpha2code: alpha2code,
         });
       }
     } else {
-      this.props.navigation.navigate('Chart');
+      this.props.navigation.navigate('COVID TRACKER');
     }
 
     return (
@@ -44,11 +42,11 @@ class Details extends Component {
           ItemSeparatorComponent={() => <View style={styles.separator} />}
           data={this.state.flatData}
           renderItem={({item, index}) => (
-            <Text>
-              Date: {item.date_value}; Infected: {item.total_cases}; Death:{' '}
-              {item.total_deaths};
+            <Text style={styles.text}>
+              Date: {item.date_value}; Infected: {item.total_cases}; Death: {item.total_deaths};
             </Text>
           )}
+          keyExtractor={i => i.date_value}
         />
       </View>
     );
@@ -61,11 +59,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   separator: {
-    height: 0.4,
-    backgroundColor: 'gray',
+    height: 2,
+    backgroundColor: 'white',
   },
   text: {
-    fontSize: 32,
+    fontSize: 18,
+    color: 'black',
   },
 });
 

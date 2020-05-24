@@ -13,7 +13,7 @@ class App extends Component {
     return (
       <NavigationContainer>
         <Stack.Navigator>
-          <Stack.Screen name={'Chart'} component={Chart} />
+          <Stack.Screen name={'COVID TRACKER'} component={Chart} />
           <Stack.Screen name={'Details'} component={Details} />
           <Stack.Screen name={'Country'} component={Country} />
         </Stack.Navigator>

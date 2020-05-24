@@ -5,13 +5,11 @@ import {BarChart, LineChart} from 'react-native-chart-kit';
 class Chart extends Component {
   url1 = 'https://api.thevirustracker.com/free-api?countryTimeline=';
   url2 = 'https://api.thevirustracker.com/free-api?countryTotal=';
-  alpha2code = 'RU';
-  _flag = true;
-  country = 'Russia';
+  isStart = true;
 
   state = {
     alpha2code: 'RU',
-    text: 'RU',
+    country: 'Russia',
     json: null,
     total_recovered: 0,
   };
@@ -23,14 +21,15 @@ class Chart extends Component {
 
   componentDidMount() {
     console.log('Hello from componentDidMount1!');
-    this.getData(this.alpha2code, this.country);
+    this.getData(this.state.alpha2code, this.state.country);
   }
 
   componentDidUpdate = () => {
     console.log('Hello from componentDidUpdate1');
-    if (this._flag) {
+    if (this.isStart) {
+      setTimeout(() => this._scrollView2.scrollToEnd(), 0);
       setTimeout(() => this._scrollView.scrollToEnd(), 0);
-      this._flag = false;
+      this.isStart = false;
     }
   };
 
@@ -63,8 +62,8 @@ class Chart extends Component {
     }
 
     let labels = [];
-    let data = [];
-    let data2 = [];
+    let dataChartInfected = [];
+    let dataChartDead = [];
     let flatData = [];
     let total_infected = 0;
     let total_dead = 0;
@@ -84,8 +83,8 @@ class Chart extends Component {
           total_deaths: 0,
         });
         labels.push(month.toString() + '/' + dayAsString + '/20');
-        data.push(0);
-        data2.push(0);
+        dataChartInfected.push(0);
+        dataChartDead.push(0);
         day += 1;
         if (day > total_days[month - 1]) {
           day = 1;
@@ -97,14 +96,15 @@ class Chart extends Component {
           dayAsString = day.toString();
         }
       }
+
       keys.forEach(i => {
         let record = this.state.json[i];
         if (record !== 'ok') {
           record.date_value = i;
           flatData.push(record);
           labels.push(record.date_value);
-          data.push(record.total_cases);
-          data2.push(record.total_deaths);
+          dataChartInfected.push(record.total_cases);
+          dataChartDead.push(record.total_deaths);
         }
       });
       total_infected = flatData[flatData.length - 1].total_cases;
@@ -116,56 +116,85 @@ class Chart extends Component {
 
     return (
       <View>
-        <Text style={styles.text}> {this.state.country} </Text>
-        <Button
-          title={'Change country'}
-          onPress={() => this.props.navigation.navigate('Country')}
-        />
-        <ScrollView
-          ref={_scrollView => {
-            this._scrollView = _scrollView;
-          }}
-          horizontal={true}>
-          <BarChart
-            data={{
-              labels: labels,
-              datasets: [{data: data2}, {data: data}],
-            }}
-            width={chart_width}
-            height={220}
-            yAxisInterval={1}
-            yLabelsOffset={0}
-            chartConfig={chartConfig}
-            bezier
-            style={{
-              backgroundColor: 'black',
-              marginVertical: 8,
-              borderRadius: 16,
-            }}
-            yAxisLabel={''}
-            yAxisSuffix={''}
+        <ScrollView>
+          <Button
+            color={'orange'}
+            title={'Change country'}
+            onPress={() => this.props.navigation.navigate('Country')}
           />
+          <Text style={styles.textH}> {this.state.country} </Text>
+          <Text style={styles.text}>
+            {' '}
+            {total_infected} people were infected{' '}
+          </Text>
+          <Text style={styles.text}> {total_dead} people died </Text>
+          <Text style={styles.textI}>
+            {' '}
+            INFECTED NOW: {infected_now} people{' '}
+          </Text>
+          <Button
+            style={styles.textI}
+            title={'Details'}
+            onPress={() =>
+              this.props.navigation.navigate('Details', {
+                _flatData: flatData,
+                alpha2code: this.alpha2code,
+              })
+            }
+          />
+          <Text style={styles.textC}> Chart of infected </Text>
+          <ScrollView
+            ref={_scrollView => {
+              this._scrollView = _scrollView;
+            }}
+            horizontal={true}>
+            <BarChart
+              data={{
+                labels: labels,
+                datasets: [{data: dataChartInfected}],
+              }}
+              width={chart_width}
+              height={170}
+              yAxisInterval={1}
+              yLabelsOffset={0}
+              chartConfig={chartConfig}
+              bezier
+              style={{
+                backgroundColor: 'black',
+                marginVertical: 8,
+                borderRadius: 16,
+              }}
+              yAxisLabel={''}
+              yAxisSuffix={''}
+            />
+          </ScrollView>
+          <Text style={styles.textC}> Chart of dead </Text>
+          <ScrollView
+            ref={_scrollView => {
+              this._scrollView2 = _scrollView;
+            }}
+            horizontal={true}>
+            <BarChart
+              data={{
+                labels: labels,
+                datasets: [{data: dataChartDead}],
+              }}
+              width={chart_width}
+              height={170}
+              yAxisInterval={1}
+              yLabelsOffset={0}
+              chartConfig={chartConfig}
+              bezier
+              style={{
+                backgroundColor: 'black',
+                marginVertical: 8,
+                borderRadius: 16,
+              }}
+              yAxisLabel={''}
+              yAxisSuffix={''}
+            />
+          </ScrollView>
         </ScrollView>
-        <Text>
-          Now: total cases infection = {total_infected}, total deaths ={' '}
-          {total_dead}
-        </Text>
-        <Text style={styles.text}>INFECTED NOW: {infected_now}</Text>
-        {/*<TextInput*/}
-        {/*  style={styles.input}*/}
-        {/*  placeholder="Enter country"*/}
-        {/*  onChangeText={_text => this.setState({text: _text})}*/}
-        {/*  onEndEditing={() => this.changeCountry(this.state.text)}*/}
-        {/*/>*/}
-        <Button
-          title={'Details'}
-          onPress={() =>
-            this.props.navigation.navigate('Details', {
-              _flatData: flatData,
-              alpha2code: this.alpha2code,
-            })
-          }
-        />
       </View>
     );
   }
@@ -187,18 +216,24 @@ const chartConfig = {
 };
 
 const styles = StyleSheet.create({
-  text: {
-    fontSize: 32,
+  textH: {
+    fontSize: 25,
+    textAlign: 'center',
+    color: 'black',
+  },
+  textC: {
+    fontSize: 15,
+    color: 'green',
+  },
+  textI: {
+    fontSize: 20,
+    color: 'red',
     textAlign: 'center',
   },
-  input: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#777',
-    width: 300,
-    height: 40,
-    margin: 10,
+  text: {
+    fontSize: 20,
+    color: 'black',
+    textAlign: 'center',
   },
 });
 

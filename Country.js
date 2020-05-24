@@ -13,8 +13,8 @@ export default class Country extends Component {
 
   async getCountry() {
     try {
-      var response = await fetch(this.url);
-      var json = await response.json();
+      let response = await fetch(this.url);
+      let json = await response.json();
       this.setState({json: json});
     } catch (error) {
       alert('Failed with ' + error.message);
@@ -22,11 +22,11 @@ export default class Country extends Component {
   }
 
   changeJson() {
-    var json2 = {};
+    let json2 = {};
     if (this.state.json !== null) {
-      var keys = Object.keys(this.state.json);
+      let keys = Object.keys(this.state.json);
       keys.forEach(key => {
-        var val = this.state.json[key];
+        let val = this.state.json[key];
         json2[val] = key;
       });
     }
@@ -39,27 +39,27 @@ export default class Country extends Component {
     this.getCountry();
   }
 
-  componentDidUpdate() {
+  componentDidUpdate = () => {
     if (this.isStart) {
       this.changeJson();
       this.isStart = false;
     }
-  }
+  };
 
   updateCountry = country => {
     this.setState({
       country: country,
     });
-    this.props.navigation.navigate('Chart', {
+    this.props.navigation.navigate('COVID TRACKER', {
       alpha2code: this.state.json2[country],
       country: country,
     });
   };
 
   render() {
-    var list_country = [];
+    let list_country = [];
     if (this.state.json2 !== null) {
-      var keys = Object.keys(this.state.json2);
+      let keys = Object.keys(this.state.json2);
       keys.forEach(i => {
         list_country.push(i);
       });
@@ -69,6 +69,7 @@ export default class Country extends Component {
     return (
       <View>
         <FlatList
+          ItemSeparatorComponent={() => <View style={styles.separator} />}
           data={list_country}
           renderItem={({item, index}) => {
             return (
@@ -79,6 +80,7 @@ export default class Country extends Component {
               />
             );
           }}
+          keyExtractor={i => i}
         />
       </View>
     );
@@ -112,13 +114,8 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 32,
   },
-  input: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#777',
-    width: 300,
-    height: 40,
-    margin: 10,
+  separator: {
+    height: 1,
+    backgroundColor: 'white',
   },
 });
