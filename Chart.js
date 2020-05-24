@@ -1,76 +1,91 @@
 import React, {Component} from 'react';
-import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  FlatList,
-  Dimensions,
-  ScrollView,
-  TextInput,
-} from 'react-native';
-import {Input} from 'react-native-elements';
-import {BarChart} from 'react-native-chart-kit';
-
-const scrollView = ScrollView;
+import {View, Text, Button, StyleSheet, ScrollView} from 'react-native';
+import {BarChart, LineChart} from 'react-native-chart-kit';
 
 class Chart extends Component {
-  prevUrl = 'https://api.thevirustracker.com/free-api?countryTimeline=RU';
+  url1 = 'https://api.thevirustracker.com/free-api?countryTimeline=';
+  url2 = 'https://api.thevirustracker.com/free-api?countryTotal=';
+  alpha2code = 'RU';
+  _flag = true;
+  country = 'Russia';
+
   state = {
-    url: 'https://api.thevirustracker.com/free-api?countryTimeline=RU',
+    alpha2code: 'RU',
     text: 'RU',
-    //json: null,
-    label: 'Initialized',
+    json: null,
+    total_recovered: 0,
   };
 
   constructor(props) {
     super(props);
-    console.log('Hello from constructor!');
+    console.log('Hello from constructor1!');
   }
 
   componentDidMount() {
-    console.log('Hello from componentDidMount!');
-    setTimeout(() => this.refs._scrollView.scrollToEnd(), 0);
-    this.getData();
+    console.log('Hello from componentDidMount1!');
+    this.getData(this.alpha2code, this.country);
   }
 
-  componentDidUpdate() {
-    if (this.prevUrl !== this.state.url) {
-      this.prevUrl = this.state.url;
-      this.getData();
+  componentDidUpdate = () => {
+    console.log('Hello from componentDidUpdate1');
+    if (this._flag) {
+      setTimeout(() => this._scrollView.scrollToEnd(), 0);
+      this._flag = false;
     }
-  }
-  async getData() {
+  };
+
+  async getData(alpha2code, country) {
     try {
-      var response = await fetch(this.state.url);
-      var json = await response.json();
-      //console.log(json.timelineitems[0]);
-      this.setState({json: json.timelineitems[0]});
+      let response = await fetch(this.url1 + alpha2code);
+      let json = await response.json();
+      let response2 = await fetch(this.url2 + alpha2code);
+      let json2 = await response2.json();
+      this.setState({
+        json: json.timelineitems[0],
+        total_recovered: json2.countrydata[0].total_recovered,
+        country: country,
+        alpha2code: alpha2code,
+      });
     } catch (error) {
-      alert('Failed with ' + error.message);
+      alert('Data do not exist for selected country yet');
     }
   }
 
   render() {
-    var labels = [];
-    var data = [];
-    var flatData = [];
-    var month = 1;
-    var day = 1;
-    var total_days = [31, 29, 31, 30, 31, 30];
-    var dayAsString = '01';
-    var total_infected = 0;
-    var total_dead = 0;
-    var today_infected = 0;
+    console.log('Hello from render1');
+
+    if (this.props.route.params !== undefined) {
+      const alpha2code = this.props.route.params.alpha2code;
+      const country = this.props.route.params.country;
+      if (alpha2code !== this.state.alpha2code) {
+        this.getData(alpha2code, country);
+      }
+    }
+
+    let labels = [];
+    let data = [];
+    let data2 = [];
+    let flatData = [];
+    let total_infected = 0;
+    let total_dead = 0;
+    let infected_now = 0;
+
     if (this.state.json != null) {
-      var keys = Object.keys(this.state.json);
+      let keys = Object.keys(this.state.json);
       // add days from 01/01/20 if they not exist
+      let month = 1;
+      let day = 1;
+      let total_days = [31, 29, 31, 30, 31, 30];
+      let dayAsString = '01';
       while (keys[0] !== month.toString() + '/' + dayAsString + '/20') {
         flatData.push({
           date_value: month.toString() + '/' + dayAsString + '/20',
           total_cases: 0,
+          total_deaths: 0,
         });
-        //console.log(day, month, keys[0]);
+        labels.push(month.toString() + '/' + dayAsString + '/20');
+        data.push(0);
+        data2.push(0);
         day += 1;
         if (day > total_days[month - 1]) {
           day = 1;
@@ -83,37 +98,40 @@ class Chart extends Component {
         }
       }
       keys.forEach(i => {
-        var record = this.state.json[i];
+        let record = this.state.json[i];
         if (record !== 'ok') {
           record.date_value = i;
           flatData.push(record);
-          //console.log(record.date_value);
           labels.push(record.date_value);
           data.push(record.total_cases);
+          data2.push(record.total_deaths);
         }
       });
-      //console.log(flatData);
       total_infected = flatData[flatData.length - 1].total_cases;
       total_dead = flatData[flatData.length - 1].total_deaths;
+      infected_now = total_infected - total_dead - this.state.total_recovered;
     }
-    //console.log(flatData[10]);
-    //console.log(labels);
-    //console.log(data);
-    //console.log(this.state.text);
+
+    let chart_width = 55 * labels.length;
+
     return (
       <View>
-        <Text>Chart Infected</Text>
-        <ScrollView ref="_scrollView" horizontal={true}>
+        <Text style={styles.text}> {this.state.country} </Text>
+        <Button
+          title={'Change country'}
+          onPress={() => this.props.navigation.navigate('Country')}
+        />
+        <ScrollView
+          ref={_scrollView => {
+            this._scrollView = _scrollView;
+          }}
+          horizontal={true}>
           <BarChart
             data={{
               labels: labels,
-              datasets: [
-                {
-                  data: data,
-                },
-              ],
+              datasets: [{data: data2}, {data: data}],
             }}
-            width={6500}
+            width={chart_width}
             height={220}
             yAxisInterval={1}
             yLabelsOffset={0}
@@ -124,27 +142,32 @@ class Chart extends Component {
               marginVertical: 8,
               borderRadius: 16,
             }}
+            yAxisLabel={''}
+            yAxisSuffix={''}
           />
         </ScrollView>
         <Text>
           Now: total cases infection = {total_infected}, total deaths ={' '}
           {total_dead}
         </Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter country"
-          onChangeText={_text => this.setState({text: _text})}
-          onEndEditing={() => this.changeCountry(this.state.text)}
-          //onTextInput={() => this.changeCountry(this.state.text)}
+        <Text style={styles.text}>INFECTED NOW: {infected_now}</Text>
+        {/*<TextInput*/}
+        {/*  style={styles.input}*/}
+        {/*  placeholder="Enter country"*/}
+        {/*  onChangeText={_text => this.setState({text: _text})}*/}
+        {/*  onEndEditing={() => this.changeCountry(this.state.text)}*/}
+        {/*/>*/}
+        <Button
+          title={'Details'}
+          onPress={() =>
+            this.props.navigation.navigate('Details', {
+              _flatData: flatData,
+              alpha2code: this.alpha2code,
+            })
+          }
         />
       </View>
     );
-  }
-
-  changeCountry(_text) {
-    this.setState({
-      url: 'https://api.thevirustracker.com/free-api?countryTimeline=' + _text,
-    });
   }
 }
 
@@ -166,6 +189,7 @@ const chartConfig = {
 const styles = StyleSheet.create({
   text: {
     fontSize: 32,
+    textAlign: 'center',
   },
   input: {
     alignItems: 'center',

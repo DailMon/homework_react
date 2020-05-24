@@ -1,35 +1,25 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
 import 'react-native-gesture-handler';
 import React, {Component} from 'react';
-import {View, Text, Button, StyleSheet, FlatList} from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
-// import {createStackNavigator} from '@react-navigation/stack';
-// import StackNavigator from '@react-navigation/stack/src/navigators/createStackNavigator';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import Tracker from './Tracker';
+import {createStackNavigator} from '@react-navigation/stack';
+import Details from './Details';
 import Chart from './Chart';
+import Country from './Country';
 
-const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
 class App extends Component {
   render() {
     return (
       <NavigationContainer>
-        <Tab.Navigator>
-          <Tab.Screen name="Chart" component={Chart} />
-          <Tab.Screen name="Tracker" component={Tracker} />
-        </Tab.Navigator>
+        <Stack.Navigator>
+          <Stack.Screen name={'Chart'} component={Chart} />
+          <Stack.Screen name={'Details'} component={Details} />
+          <Stack.Screen name={'Country'} component={Country} />
+        </Stack.Navigator>
       </NavigationContainer>
     );
   }
 }
-
-const styles = StyleSheet.create({});
 
 export default App;
